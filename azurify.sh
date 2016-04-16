@@ -7,6 +7,8 @@ while getopts p: ch; do
 done
 shift $(( $OPTIND - 1 ))
 
+echo "Adding Azure support to $1".
+
 virt-customize -a "$1" \
 	${OPT_PASSWORD:+--root-password password:"$OPT_PASSWORD"} \
 	--install epel-release \
@@ -16,4 +18,10 @@ virt-customize -a "$1" \
 	--upload cloud.cfg.d/azure.cfg:/etc/cloud/cloud.cfg.d/azure.cfg \
 	--upload waagent.conf:/etc/waagent.conf \
 	--upload waagent.service:/etc/systemd/system/waagent.service \
-	--run-command "systemctl enable waagent"
+	--selinux-relabel
+
+# Install alternate version of the Azure data source
+#	--upload DataSourceAzure.py:/usr/lib/python2.7/site-packages/cloudinit/sources/DataSourceAzure.py \
+
+# Use this to disable selinux
+#	--run-command "sed -i '/^SELINUX=/ s/=.*/=permissive/' /etc/selinux/config" \
