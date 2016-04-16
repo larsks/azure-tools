@@ -1,7 +1,6 @@
 [Unit]
 Description=Windows Azure Linux Agent
 After=network.target
-Before=cloud-init.service
 ConditionFileIsExecutable=/usr/sbin/waagent
 ConditionPathExists=/etc/waagent.conf
 
