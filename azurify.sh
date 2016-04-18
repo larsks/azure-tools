@@ -14,8 +14,8 @@ virt-customize -a "$1" \
 	--install epel-release \
 	--upload cloud-init.rpm:/tmp/cloud-init.rpm \
 	--run-command "yum -y install /tmp/cloud-init.rpm" \
-	--upload cloud.cfg.d/azure.cfg:/etc/cloud/cloud.cfg.d/azure.cfg \
 	--selinux-relabel
 
 # Use this to disable selinux
 #	--run-command "sed -i '/^SELINUX=/ s/=.*/=permissive/' /etc/selinux/config" \
+#	--upload cloud.cfg.d/azure.cfg:/etc/cloud/cloud.cfg.d/azure.cfg \
