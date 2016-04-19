@@ -1,6 +1,7 @@
 #!/bin/sh
 
 exec docker run --rm \
+	--env-file $HOME/.azure/env \
 	-v /etc/passwd:/etc/passwd \
 	-v $HOME:$HOME \
 	-u $UID -w $PWD \
