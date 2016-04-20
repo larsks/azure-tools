@@ -40,7 +40,7 @@ If you look at the `DoDhcpWork` method in the `waagent` script, you can see that
 
 ## REST API Endpoints
 
-- `/?comp=versions` -- get a list of API versions supported by the configuration server.
+- `GET /?comp=versions` -- get a list of API versions supported by the configuration server.
 
   A request looks like:
 
@@ -67,7 +67,7 @@ If you look at the `DoDhcpWork` method in the `waagent` script, you can see that
           </Supported>
         </Versions>
 
-- `/machine/?comp=goalstate` -- return an XML document with information about available API configuration endpoints for this host.  Can except the `x-ms-version` HTTP header (`-H "x-ms-version: 2012-11-30"`) and the `x-ms-agent` header (which should be `WALinuxAgent`).
+- `GET /machine/?comp=goalstate` -- return an XML document with information about available API configuration endpoints for this host.  Can except the `x-ms-version` HTTP header (`-H "x-ms-version: 2012-11-30"`) and the `x-ms-agent` header (which should be `WALinuxAgent`).
 
   A request looks like:
 
@@ -106,7 +106,7 @@ If you look at the `DoDhcpWork` method in the `waagent` script, you can see that
           </Container>
         </GoalState>
 
-- `/machine/<container_id>/<instance_id>?comp=config&type=hostingEnvironmentConfig&incarnation=1`
+- `GET /machine/<container_id>/<instance_id>?comp=config&type=hostingEnvironmentConfig&incarnation=1`
 
   A request looks like:
 
@@ -134,7 +134,7 @@ If you look at the `DoDhcpWork` method in the `waagent` script, you can see that
           </ApplicationSettings>
         </HostingEnvironmentConfig>
 
-- `/machine/<container_id>/<instance_id>?comp=config&type=sharedConfig&incarnation=1`
+- `GET /machine/<container_id>/<instance_id>?comp=config&type=sharedConfig&incarnation=1`
 
   A request looks like:
 
@@ -180,7 +180,7 @@ If you look at the `DoDhcpWork` method in the `waagent` script, you can see that
           </Instances>
         </SharedConfig>
 
-- `/machine/<container_id>/<instance_id>?comp=config&type=extensionConfig&incarnation=1`
+- `GET /machine/<container_id>/<instance_id>?comp=config&type=extensionConfig&incarnation=1`
 
   A request looks like:
 
@@ -231,11 +231,11 @@ If you look at the `DoDhcpWork` method in the `waagent` script, you can see that
         <StatusUploadBlob statusBlobType="BlockBlob">https://example.blob.core.windows.net/vm-images/lars-test-1.lars-test-1.lars-test-1.status?sr=b&amp;sp=rw&amp;se=9999-01-01&amp;sk=key1&amp;sv=2014-02-14&amp;sig=I3w8%2BrZg3Y2qDM5Qc48bk0qLDTEMR6Ez6Ufzx9SL5zg%3D</StatusUploadBlob></Extensions>
 
 
-- `/machine/<container_id>/<instance_id>?comp=config&type=fullConfig&incarnation=1`
+- `GET /machine/<container_id>/<instance_id>?comp=config&type=fullConfig&incarnation=1`
 
   This appears to be a combination of the other individual config endpoints.
 
-- `/machine/<container_id>/<instance_id>?comp=certificates&incarnation=1`
+- `GET /machine/<container_id>/<instance_id>?comp=certificates&incarnation=1`
 
   Requests certificates (such as SSH public keys) from the configuration server.  This requires the `x-ms-guest-agent-public-x509-cert` HTTP header, the value of which is an X509 certificate that will be used to encrypt data to the client, and the `x-ms-cipher-name` header, which on my systems is set to `DES_EDE3_CBC`.
 
@@ -292,3 +292,79 @@ If you look at the `DoDhcpWork` method in the `waagent` script, you can see that
           -recip TransportCert.pem |
         openssl pkcs12 -nodes -password pass: -out Certificates.pem
 
+- `POST /machine?comp=health`
+
+  Example `POST` data:
+
+        <?xml version="1.0" encoding="utf-8"?>
+        <Health xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:xsd="http://www.w3.org/2001/XMLSchema">
+          <GoalStateIncarnation>1</GoalStateIncarnation>
+          <Container>
+            <ContainerId>6f2b8f64-f35c-4f84-a1b0-7e71ff8e454e</ContainerId>
+            <RoleInstanceList>
+              <Role>
+                <InstanceId>aa166a1dc9fb47d8befbb43b6849ce61.lars-test-1</InstanceId>
+                <Health>
+                  <State>NotReady</State>
+                  <Details>
+                    <SubStatus>Provisioning</SubStatus>
+                    <Description>Starting</Description>
+                  </Details>
+                </Health>
+              </Role>
+            </RoleInstanceList>
+          </Container>
+        </Health>
+
+  The `<Health>` element contains the current state of the server,
+  which can be `NotReady`, with details, as in:
+
+        <Health>
+          <State>NotReady</State>
+          <Details>
+            <SubStatus>Provisioning</SubStatus>
+            <Description>Starting</Description>
+          </Details>
+        </Health>
+
+  Or `Ready`, as in:
+
+        <Health>
+          <State>Ready</State>
+        </Health>
+
+- `POST /machine?comp=telemetrydata`
+
+  Example `POST` data:
+
+        <?xml version="1.0"?>
+        <TelemetryData version="1.0">
+          <Provider id="69B669B9-4AF8-4C50-BDC4-6006FA76E975">
+            <Event id="1"><![CDATA[<Param Name="OperationSuccess" T="mt:bool" Value="True"/><Param Name="Processors" T="mt:uint64" Value="2"/><Param Name="OpcodeName" T="mt:wstr" Value=""/><Param Name="Version" T="mt:wstr" Value="1.0"/><Param Name="RoleName" T="mt:wstr" Value="lars-test-1"/><Param Name="IsInternal" T="mt:bool" Value="False"/><Param Name="RAM" T="mt:uint64" Value="3280"/><Param Name="ExecutionMode" T="mt:wstr" Value="IAAS"/><Param Name="RoleInstanceName" T="mt:wstr" Value="lars-test-1"/><Param Name="Name" T="mt:wstr" Value="WALA"/><Param Name="Message" T="mt:wstr" Value="WALA Config Ctime:Wed Apr 20 20:10:21 2016"/><Param Name="KeywordName" T="mt:wstr" Value=""/><Param Name="TaskName" T="mt:wstr" Value=""/><Param Name="OSVersion" T="mt:wstr" Value="Linux:CentOS Linux-7.2.1511-Core:3.10.0-327.10.1.el7.x86_64"/><Param Name="Operation" T="mt:wstr" Value="Provision"/><Param Name="ContainerId" T="mt:wstr" Value="6f2b8f64-f35c-4f84-a1b0-7e71ff8e454e"/><Param Name="GAVersion" T="mt:wstr" Value="WALinuxAgent-2.0.14"/><Param Name="TenantName" T="mt:wstr" Value="aa166a1dc9fb47d8befbb43b6849ce61"/><Param Name="Duration" T="mt:uint64" Value="0"/><Param Name="ExtensionType" T="mt:wstr" Value=""/>]]></Event>
+            <Event id="1"><![CDATA[<Param Name="OperationSuccess" T="mt:bool" Value="True"/><Param Name="Processors" T="mt:uint64" Value="2"/><Param Name="OpcodeName" T="mt:wstr" Value=""/><Param Name="Version" T="mt:wstr" Value="1.0"/><Param Name="RoleName" T="mt:wstr" Value="lars-test-1"/><Param Name="IsInternal" T="mt:bool" Value="False"/><Param Name="RAM" T="mt:uint64" Value="3280"/><Param Name="ExecutionMode" T="mt:wstr" Value="IAAS"/><Param Name="RoleInstanceName" T="mt:wstr" Value="lars-test-1"/><Param Name="Name" T="mt:wstr" Value="WALA"/><Param Name="Message" T="mt:wstr" Value=""/><Param Name="KeywordName" T="mt:wstr" Value=""/><Param Name="TaskName" T="mt:wstr" Value=""/><Param Name="OSVersion" T="mt:wstr" Value="Linux:CentOS Linux-7.2.1511-Core:3.10.0-327.10.1.el7.x86_64"/><Param Name="Operation" T="mt:wstr" Value="HeartBeat"/><Param Name="ContainerId" T="mt:wstr" Value="6f2b8f64-f35c-4f84-a1b0-7e71ff8e454e"/><Param Name="GAVersion" T="mt:wstr" Value="WALinuxAgent-2.0.14"/><Param Name="TenantName" T="mt:wstr" Value="aa166a1dc9fb47d8befbb43b6849ce61"/><Param Name="Duration" T="mt:uint64" Value="0"/><Param Name="ExtensionType" T="mt:wstr" Value=""/>]]></Event>
+          </Provider>
+        </TelemetryData>
+
+- `POST /machine?comp=roleProperties`
+
+  Example `POST` data:
+
+        <?xml version="1.0" encoding="utf-8"?>
+        <RoleProperties>
+          <Container>
+            <ContainerId>6f2b8f64-f35c-4f84-a1b0-7e71ff8e454e</ContainerId>
+            <RoleInstances>
+              <RoleInstance>
+                <Id>aa166a1dc9fb47d8befbb43b6849ce61.lars-test-1</Id>
+                <Properties>
+                  <Property name="CertificateThumbprint" value="11a3ff199d1d18995967e6efba4e77c9"/>
+                </Properties>
+              </RoleInstance>
+            </RoleInstances>
+          </Container>
+        </RoleProperties>
+
+    The `CertificateThumbprint` property is the fingerprint of one of
+    your SSH host keys.  The default is `/etc/ssh/ssh_host_rsa_key`,
+    but this can be modified by the `Provisioning.SshHostKeyPairType`
+    setting in the waagent configuration.
