@@ -1,19 +1,11 @@
 #!/bin/sh
 
-tmpfile=$(mktemp azureXXXXXX)
-trap "rm -f $tmpfile" EXIT
-
-echo getting vm info
-azure vm show "$1" > $tmpfile
-
 echo getting image name
-image=$(awk -F'"' '/sourceImageName/ {print $2}' $tmpfile)
+image=$(azure vm show "$1"  |
+	awk -F'"' '/sourceImageName/ {print $2}')
 
 echo deleting vm "$1"
 azure vm delete -q "$1"
 
 echo deleting image "$image"
-azure vm image delete -v "$image"
-
-echo removing ssh hostkey for "$1"
-ssh-keygen -R "$1.cloudapp.net"
+azure vm image delete -b "$image"
